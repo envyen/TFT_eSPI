@@ -393,6 +393,8 @@ class TFT_eSPI : public Print { friend class TFT_eSprite; // Sprite class has ac
   // init() and begin() are equivalent, begin() included for backwards compatibility
   // Sketch defined tab colour option is for ST7735 displays only
   void     init(uint8_t tc = TAB_COLOUR), begin(uint8_t tc = TAB_COLOUR);
+  // Workaround: end SPI for use with SDCard
+  void     end();
 
   // These are virtual so the TFT_eSprite class can override them with sprite specific functions
   virtual void     drawPixel(int32_t x, int32_t y, uint32_t color),
