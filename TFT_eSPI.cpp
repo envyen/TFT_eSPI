@@ -763,6 +763,9 @@ void TFT_eSPI::init(uint8_t tc)
 #endif
 }
 
+void TFT_eSPI::end(){
+  spi.end();
+}
 
 /***************************************************************************************
 ** Function name:           setRotation
