@@ -1298,6 +1298,35 @@ void TFT_eSPI::pushRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *da
   _swapBytes = swap;
 }
 
+/***************************************************************************************
+** Function name:           pushImageSwapped
+** Description:             plot 16 bit colour sprite or image onto TFT swappedbytes
+***************************************************************************************/
+void TFT_eSPI::pushImageSwapped(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data)
+{
+  PI_CLIP;
+
+  begin_tft_write();
+  inTransaction = true;
+
+  setWindow(x, y, x + dw - 1, y + dh - 1);
+
+  data += dx + dy * w;
+
+  // Check if whole image can be pushed
+  if (dw == w) pushSwapBytePixels(data, dw * dh);
+  else {
+    // Push line segments to crop image
+    while (dh--)
+    {
+      pushSwapBytePixels(data, dw);
+      data += w;
+    }
+  }
+
+  inTransaction = lockTransaction;
+  end_tft_write();
+}
 
 /***************************************************************************************
 ** Function name:           pushImage
