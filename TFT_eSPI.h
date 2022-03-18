@@ -534,6 +534,7 @@ class TFT_eSPI : public Print { friend class TFT_eSprite; // Sprite class has ac
 
            // These are used to render images or sprites stored in RAM arrays (used by Sprite class for 16bpp Sprites)
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data);
+  void     pushImageSwapped(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data);
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data, uint16_t transparent);
 
            // These are used to render images stored in FLASH (PROGMEM)
