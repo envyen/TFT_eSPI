@@ -43,14 +43,14 @@ static const uint16_t tft_io_program_instructions[] = {
     0x80a0, // 19: pull   block                      
     0xa047, // 20: mov    y, osr                     
     0xb0e1, // 21: mov    osr, x          side 0     
-    0x7011, // 22: out    pins, 17        side 0     
+    0x7009, // 22: out    pins, 9         side 0     
     0xb842, // 23: nop                    side 1     
     0x7001, // 24: out    pins, 1         side 0     
     0x18f8, // 25: jmp    !osre, 24       side 1     
     0x1095, // 26: jmp    y--, 21         side 0     
             //     .wrap_target
     0x90a0, // 27: pull   block           side 0     
-    0x7011, // 28: out    pins, 17        side 0     
+    0x7009, // 28: out    pins, 9         side 0     
     0xb842, // 29: nop                    side 1     
     0x7001, // 30: out    pins, 1         side 0     
     0x18fe, // 31: jmp    !osre, 30       side 1     

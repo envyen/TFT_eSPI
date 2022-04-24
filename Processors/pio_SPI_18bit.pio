@@ -1,4 +1,4 @@
-// Raspberry Pi Pico PIO program to output data to a TFT
+// Raspberry Pi Pico PIO program to output 18 bit data to a TFT
 // controller via a SPI output data path.
 
 //"Set" set: 1 output pin, TFT_DC
@@ -60,11 +60,11 @@ public block_fill:
 next_16:
    // Copy colour value back into osr
    mov osr, x side 0
-   // Lose the top 16 bits, send 1st bit
-   out pins, 17 side 0
+   // Lose the top 8 bits, send 1st bit
+   out pins, 9 side 0
    nop side 1
 next_bit:
-   // Output next 15 colour bits
+   // Output next remaining bits
    out pins, 1 side 0
    // Set TFT_SCLK high and jump for next bit
    jmp !osre, next_bit side 1
@@ -75,13 +75,13 @@ next_bit:
 .wrap_target
 public start_tx:
    // Pull the next 32 bit value from the TX FIFO. 
-   // Send the bottom 16 bits
+   // Send the bottom 24 bits
    pull side 0
-   // Drop the first 16 bits, write first bit
-   out pins, 17 side 0
+   // Drop the first 8 bits, write first bit
+   out pins, 9 side 0
    nop side 1
 spi_out:
-   // Output the next 15 bits
+   // Output the remaining bits
    out pins, 1 side 0
    // Set TFT_SCLK high and jump for next bit
    jmp !osre, spi_out side 1
