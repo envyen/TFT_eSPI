@@ -17,7 +17,13 @@
 #include "TFT_eSPI.h"
 
 #if defined (ESP32)
-  #include "Processors/TFT_eSPI_ESP32.c"
+  #if defined(CONFIG_IDF_TARGET_ESP32S3)
+    #include "Processors/TFT_eSPI_ESP32_S3.c" // Tested with SPI and 8 bit parallel
+  #elif defined(CONFIG_IDF_TARGET_ESP32C3)
+    #include "Processors/TFT_eSPI_ESP32_C3.c" // Tested with SPI (8 bit parallel will probably work too!)
+  #else
+    #include "Processors/TFT_eSPI_ESP32.c"
+  #endif
 #elif defined (ESP8266)
   #include "Processors/TFT_eSPI_ESP8266.c"
 #elif defined (STM32) // (_VARIANT_ARDUINO_STM32_) stm32_def.h
@@ -467,7 +473,7 @@ TFT_eSPI::TFT_eSPI(int16_t w, int16_t h)
   _cp437    = true;     // Legacy GLCD font bug fix
   _utf8     = true;     // UTF8 decoding enabled
 
-#ifdef FONT_FS_AVAILABLE
+#if defined (FONT_FS_AVAILABLE) && defined (SMOOTH_FONT)
   fs_font  = true;     // Smooth font filing system or array (fs_font = false) flag
 #endif
 
@@ -743,6 +749,12 @@ void TFT_eSPI::init(uint8_t tc)
 #elif defined (RM68120_DRIVER)
      #include "TFT_Drivers/RM68120_Init.h"
 
+#elif defined (HX8357B_DRIVER)
+    #include "TFT_Drivers/HX8357B_Init.h"
+
+#elif defined (HX8357C_DRIVER)
+    #include "TFT_Drivers/HX8357C_Init.h"
+
 #endif
 
 #ifdef TFT_INVERSION_ON
@@ -837,6 +849,12 @@ void TFT_eSPI::setRotation(uint8_t m)
 
 #elif defined (RM68120_DRIVER)
      #include "TFT_Drivers/RM68120_Rotation.h"
+
+#elif defined (HX8357B_DRIVER)
+    #include "TFT_Drivers/HX8357B_Rotation.h"
+
+#elif defined (HX8357C_DRIVER)
+    #include "TFT_Drivers/HX8357C_Rotation.h"
 
 #endif
 
@@ -3031,9 +3049,6 @@ void TFT_eSPI::drawChar(int32_t x, int32_t y, uint16_t c, uint32_t color, uint32
 {
   if (_vpOoB) return;
 
-  int32_t xd = x + _xDatum;
-  int32_t yd = y + _yDatum;
-
   if (c < 32) return;
 #ifdef LOAD_GLCD
 //>>>>>>>>>>>>>>>>>>
@@ -3041,6 +3056,9 @@ void TFT_eSPI::drawChar(int32_t x, int32_t y, uint16_t c, uint32_t color, uint32
   if(!gfxFont) { // 'Classic' built-in font
   #endif
 //>>>>>>>>>>>>>>>>>>
+
+  int32_t xd = x + _xDatum;
+  int32_t yd = y + _yDatum;
 
   if ((xd >= _vpW)                 || // Clip right
      ( yd >= _vpH)                 || // Clip bottom
@@ -3167,6 +3185,15 @@ void TFT_eSPI::drawChar(int32_t x, int32_t y, uint16_t c, uint32_t color, uint32
 #ifdef LOAD_GLCD
   #ifdef LOAD_GFXFF
   } // End classic vs custom font
+  #endif
+#else
+  #ifndef LOAD_GFXFF
+    // Avoid warnings if fonts are disabled
+    x = x;
+    y = y;
+    color = color;
+    bg = bg;
+    size = size;
   #endif
 #endif
 
@@ -3451,7 +3478,7 @@ void TFT_eSPI::drawPixel(int32_t x, int32_t y, uint32_t color)
 
   // write to RAM
   DC_C; tft_Write_8(TFT_RAMWR);
-  #if defined(TFT_PARALLEL_8_BIT) || !defined(ESP32)
+  #if defined(TFT_PARALLEL_8_BIT) || defined(TFT_PARALLEL_16_BIT) || !defined(ESP32)
     DC_D; tft_Write_16(color);
   #else
     DC_D; tft_Write_16N(color);
@@ -3579,7 +3606,7 @@ void TFT_eSPI::drawPixel(int32_t x, int32_t y, uint32_t color)
 
   DC_C; tft_Write_8(TFT_RAMWR);
 
-  #if defined(TFT_PARALLEL_8_BIT) || !defined(ESP32)
+  #if defined(TFT_PARALLEL_8_BIT) || defined(TFT_PARALLEL_16_BIT) || !defined(ESP32)
     DC_D; tft_Write_16(color);
   #else
     DC_D; tft_Write_16N(color);
@@ -4878,6 +4905,17 @@ int16_t TFT_eSPI::drawChar(uint16_t uniCode, int32_t x, int32_t y, uint8_t font)
   }
   // End of RLE font rendering
 #endif
+
+#if !defined (LOAD_FONT2) && !defined (LOAD_RLE)
+  // Stop warnings
+  flash_address = flash_address;
+  w = w;
+  pX = pX;
+  pY = pY;
+  line = line;
+  clip = clip;
+#endif
+
   return width * textsize;    // x +
 }
 
@@ -5404,7 +5442,7 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
   tft_settings.trans = false;
 #endif
 
-#if defined (TFT_PARALLEL_8_BIT)
+#if defined (TFT_PARALLEL_8_BIT) || defined(TFT_PARALLEL_16_BIT)
   tft_settings.serial = false;
   tft_settings.tft_spi_freq = 0;
 #else
@@ -5503,7 +5541,7 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
   tft_settings.pin_tft_rst = -1;
 #endif
 
-#if defined (TFT_PARALLEL_8_BIT)
+#if defined (TFT_PARALLEL_8_BIT) || defined(TFT_PARALLEL_16_BIT)
   tft_settings.pin_tft_d0 = TFT_D0;
   tft_settings.pin_tft_d1 = TFT_D1;
   tft_settings.pin_tft_d2 = TFT_D2;
